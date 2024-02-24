@@ -1,0 +1,43 @@
+name: DEV CD flow for Amazon ECS
+
+on:
+  push:
+    branches:
+      - develop
+
+env:
+  SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+jobs:
+  cd:
+    name: cd
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Send Success Message
+        uses: rtCamp/action-slack-notify@v2.0.2
+        if: success()
+        env:
+          SLACK_TITLE: ${{ github.event.head_commit.message }} => Success
+          SLACK_COLOR: good
+          SLACK_MESSAGE: 'dev環境のデプロイが完了しました:tada:'
+
+      - name: Send Failure Message
+        uses: rtCamp/action-slack-notify@v2.0.2
+        if: failure()
+        env:
+          SLACK_TITLE: ${{ github.event.head_commit.message }} => Failure
+          SLACK_COLOR: danger
+          SLACK_MESSAGE: 'dev環境のデプロイが失敗しました:skull_and_crossbones:'
+
+      - name: Send Cancel Message
+        uses: rtCamp/action-slack-notify@v2.0.2
+        if: cancelled()
+        env:
+          SLACK_TITLE: ${{ github.event.head_commit.message }} => Cancel
+          SLACK_COLOR: warning
+          SLACK_MESSAGE: 'dev環境のデプロイがキャンセルされました:no_entry_sign:'
